@@ -1,2 +1,4 @@
 t3-laser-dac.sublime-project
 t3-laser-dac.sublime-workspace
+*.o
+*.d

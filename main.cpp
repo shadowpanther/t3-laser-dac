@@ -19,8 +19,8 @@ extern "C" int main(void)
 		// while(stack_full==true)yield();
 		CORE_PIN13_PORTSET = CORE_PIN13_BITMASK;   // LED ON
 		x=sine[count];
-		y=sine[(count+1024)%4096];
-		count = (count+1)%4096;
+		y=sine[(count+1024)&0x0FFF];
+		count = (count+1)&0x0FFF;
 		CORE_PIN13_PORTCLEAR = CORE_PIN13_BITMASK; // LED OFF
 		laser.set(x, y, 255, 255, 255);
 	}
