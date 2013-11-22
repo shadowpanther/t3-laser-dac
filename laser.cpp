@@ -1,6 +1,7 @@
 #include "laser.h"
 #include "mk20dx128.h"
 #include "core_pins.h"
+#include "IntervalTimer.h"
 
 Laser::Laser(){
 	// Init SPI
@@ -14,15 +15,15 @@ Laser::Laser(){
 	SPI0_MCR |= SPI_MCR_DCONF(0) | SPI_MCR_MSTR | SPI_MCR_PCSIS(31); // SPI config
 	SPI0_MCR &= ~(SPI_MCR_MDIS | SPI_MCR_HALT); // SPI start
 
-	// Init PIT (Periodic Interrupt Timer)
-	SIM_SCGC6 |= SIM_SCGC6_PIT; // Clock to PIT enable
-	NVIC_ENABLE_IRQ(IRQ_PIT_CH0);
-	PIT_MCR = 0; // PIT enable
-	PIT_TCTRL0 = 0;
-	PIT_LDVAL0 = 1600; // Clock interval
-	PIT_TFLG0 = 0x01; // TIF (Timer Interrupt Flag)
-	PIT_TCTRL0 = 0x02; // TIE (Timer Interrupt Enable)
-	PIT_TCTRL0 |= 0x01; // TEN (Timer Enable)
+	// // Init PIT (Periodic Interrupt Timer)
+	// SIM_SCGC6 |= SIM_SCGC6_PIT; // Clock to PIT enable
+	// NVIC_ENABLE_IRQ(IRQ_PIT_CH0);
+	// PIT_MCR = 0; // PIT enable
+	// PIT_TCTRL0 = 0;
+	// PIT_LDVAL0 = 1600; // Clock interval
+	// PIT_TFLG0 = 0x01; // TIF (Timer Interrupt Flag)
+	// PIT_TCTRL0 = 0x02; // TIE (Timer Interrupt Enable)
+	// PIT_TCTRL0 |= 0x01; // TEN (Timer Enable)
 
 	for(int i=0; i<LASER_FIFO_SIZE; i++) {
 		fifo[i].x.sel = 0;
@@ -66,7 +67,7 @@ void Laser::tick() {
 	if(++fifo_tail==LASER_FIFO_SIZE) fifo_tail = 0;
 	if(fifo_head==fifo_tail) fifo_empty = true;
 
-	SPI0_PUSHR = SPI0_PUSHR_CTAS(0) | SPI0_PUSHR_PCS(1) | reg_x;
-	SPI0_PUSHR = SPI0_PUSHR_CTAS(0) | SPI0_PUSHR_PCS(1) | reg_y;	
+	SPI0_PUSHR = SPI_PUSHR_CTAS(0) | SPI_PUSHR_PCS(1) | reg_x;
+	SPI0_PUSHR = SPI_PUSHR_CTAS(0) | SPI_PUSHR_PCS(1) | reg_y;	
 }
 

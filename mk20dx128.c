@@ -1,3 +1,33 @@
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2013 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be 
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows 
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include "mk20dx128.h"
 
 
@@ -173,13 +203,13 @@ const uint8_t flashconfigbytes[16] = {
 // time, and the user has added a crystal, the RTC will automatically
 // begin at the time of the first upload.
 #ifndef TIME_T
-#define TIME_T 1349049600 // default 1 Oct 2012
+#define TIME_T 1349049600 // default 1 Oct 2012 (never used, Arduino sets this)
 #endif
 extern void rtc_set(unsigned long t);
 
 
 
-void startup_unused_hook(void) {}
+static void startup_unused_hook(void) {}
 void startup_early_hook(void)		__attribute__ ((weak, alias("startup_unused_hook")));
 void startup_late_hook(void)		__attribute__ ((weak, alias("startup_unused_hook")));
 
@@ -203,6 +233,9 @@ void ResetHandler(void)
 		RTC_SR = 0;
 		RTC_CR = RTC_CR_SC16P | RTC_CR_SC4P | RTC_CR_OSCE;
 	}
+
+	// release I/O pins hold, if we woke up from VLLS mode
+	if (PMC_REGSC & PMC_REGSC_ACKISO) PMC_REGSC |= PMC_REGSC_ACKISO;
 
 	// TODO: do this while the PLL is waiting to lock....
         while (dest < &_edata) *dest++ = *src++;
@@ -284,13 +317,16 @@ void _init(void)
 }
 */
 
+char *__brkval = (char *)&_ebss;
 
 void * _sbrk(int incr)
 {
-        static char *heap_end = (char *)&_ebss;
-	char *prev = heap_end;
+        //static char *heap_end = (char *)&_ebss;
+	//char *prev = heap_end;
+	//heap_end += incr;
 
-	heap_end += incr;
+	char *prev = __brkval;
+	__brkval += incr;
 	return prev;
 }
 
@@ -324,5 +360,12 @@ void __cxa_pure_virtual()
 	while (1);
 }
 
+int __cxa_guard_acquire (int *g) 
+{
+	return 1;
+}
 
+void __cxa_guard_release(int *g)
+{
+}
 

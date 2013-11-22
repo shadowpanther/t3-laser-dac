@@ -5,6 +5,8 @@
 int x=0, y=0;
 volatile bool stack_full=false;
 Laser laser;
+IntervalTimer Timer;
+void tick(void); // forward declaration
 
 extern "C" int main(void)
 {
@@ -13,14 +15,13 @@ extern "C" int main(void)
 	// Status LED pin
 	CORE_PIN13_DDRREG |= CORE_PIN13_BITMASK;
 	CORE_PIN13_CONFIG = PORT_PCR_SRE | PORT_PCR_DSE | PORT_PCR_MUX(1);
-
+	Timer.begin(tick, (float)33.3333333333);
 
 	while(1) {
-		// while(stack_full==true)yield();
 		CORE_PIN13_PORTSET = CORE_PIN13_BITMASK;   // LED ON
 		x=sine[count];
 		y=sine[(count+1024)&0x0FFF];
-		count = (count+1)&0x0FFF;
+		count = (count+4)&0x0FFF;
 		CORE_PIN13_PORTCLEAR = CORE_PIN13_BITMASK; // LED OFF
 		laser.set(x, y, 255, 255, 255);
 	}
@@ -35,7 +36,6 @@ extern "C" int main(void)
 
 }
 
-void pit0_isr(void) {
-	PIT_TFLG0 = 0x01; // TIF (Timer Interrupt Flag)
+void tick(void) {
 	laser.tick();
 }

@@ -8,12 +8,14 @@
 // some libraries and sketches depend on this
 // AVR stuff, assuming Arduino.h or WProgram.h
 // automatically includes it...
-#include "avr/pgmspace.h"
-#include "avr/interrupt.h"
+#include <avr/pgmspace.h>
+#include <avr/interrupt.h>
 
 #include "avr_functions.h"
 #include "wiring.h"
 #include "HardwareSerial.h"
+
+#define DMAMEM __attribute__ ((section(".dmabuffers"), used))
 
 #ifdef __cplusplus
 
@@ -30,6 +32,7 @@
 //#include "WCharacter.h"
 #include "WString.h"
 #include "elapsedMillis.h"
+#include "IntervalTimer.h"
 
 uint16_t makeWord(uint16_t w);
 uint16_t makeWord(byte h, byte l);

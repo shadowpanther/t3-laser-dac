@@ -1,3 +1,33 @@
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2013 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be 
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows 
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include "core_pins.h"
 #include "pins_arduino.h"
 #include "HardwareSerial.h"
@@ -193,169 +223,6 @@ void porte_isr(void)
 
 
 
-
-#if 0
-
-
-#define MIN_PULSE_WIDTH       544     // the shortest pulse sent to a servo  
-#define MAX_PULSE_WIDTH      2400     // the longest pulse sent to a servo 
-#define DEFAULT_PULSE_WIDTH  1500     // default pulse width when servo is attached
-#define REFRESH_INTERVAL    20000     // minumim time to refresh servos in microseconds 
-
-#define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_PDBIE \
-	| PDB_SC_CONT | PDB_SC_PRESCALER(2) | PDB_SC_MULT(0))
-#define PDB_PRESCALE 4
-#define usToTicks(us)    ((us) * (F_BUS / 1000) / PDB_PRESCALE / 1000)
-#define ticksToUs(ticks) ((ticks) * PDB_PRESCALE * 1000 / (F_BUS / 1000))
-
-
-uint16_t servo_active_mask = 0;
-uint8_t servo_pin[12];
-uint16_t servo_ticks[12];
-
-void init_servo(void)
-{
-	// for servo
-	SIM_SCGC6 |= SIM_SCGC6_PDB;	// TODO: use bitband for atomic read-mod-write
-	pinMode(12, OUTPUT);
-	PDB0_MOD = 0xFFFF;
-	PDB0_CNT = 0;
-	PDB0_IDLY = 0;
-	PDB0_SC = PDB_CONFIG;
-	NVIC_ENABLE_IRQ(IRQ_PDB);
-	// TODO: maybe this should be a higher priority than most
-	// other interrupts (init all to some default?)
-	PDB0_SC = PDB_CONFIG | PDB_SC_SWTRIG;
-
-	//servo_active_mask = 9;
-	servo_active_mask = 8;
-	//servo_pin[0] = 12;
-	//servo_ticks[0] = usToTicks(600);
-	servo_pin[3] = 11;
-	servo_ticks[3] = usToTicks(2100);
-	//pinMode(12, OUTPUT);
-	pinMode(11, OUTPUT);
-}
-
-void pdb_isr(void)
-{
-	static int8_t channel=0, channel_high=12;
-	static uint32_t tick_accum=0;
-	uint32_t ticks;
-	int32_t wait_ticks;
-
-	// first, if any channel was left high from the previous
-	// run, now is the time to shut it off
-	if (servo_active_mask & (1<<channel_high)) {
-		digitalWrite(servo_pin[channel_high], LOW);
-		channel_high = 12;
-	}
-	// search for the next channel to turn on
-	while (channel < 12) {
-		if (servo_active_mask & (1<<channel)) {
-			digitalWrite(servo_pin[channel], HIGH);
-			channel_high = channel;
-			ticks = servo_ticks[channel];
-			tick_accum += ticks;
-			PDB0_IDLY += ticks;
-			PDB0_SC = PDB_CONFIG | PDB_SC_LDOK;
-			channel++;
-			return;
-		}
-		channel++;
-	}
-	// when all channels have output, wait for the
-	// minimum refresh interval
-	wait_ticks = usToTicks(REFRESH_INTERVAL) - tick_accum;
-	if (wait_ticks < usToTicks(100)) wait_ticks = usToTicks(100);
-	else if (wait_ticks > 60000) wait_ticks = 60000;
-	tick_accum += wait_ticks;
-	PDB0_IDLY += wait_ticks;
-	PDB0_SC = PDB_CONFIG | PDB_SC_LDOK;
-	// if this wait is enough to satisfy the refresh
-	// interval, next time begin again at channel zero 
-	if (tick_accum >= usToTicks(REFRESH_INTERVAL)) {
-		tick_accum = 0;
-		channel = 0;
-	}
-}
-
-#endif
-
-
-static uint32_t tone_toggle_count;
-static volatile uint8_t *tone_reg;
-static uint8_t tone_pin;
-
-
-void init_tone(void)
-{
-	SIM_SCGC6 |= SIM_SCGC6_PIT; // TODO: use bitband for atomic read-mod-write
-	PIT_MCR = 0;
-	PIT_TCTRL3 = 0;		// disabled
-	tone_pin = 255;
-	NVIC_ENABLE_IRQ(IRQ_PIT_CH3);
-}
-
-void tone(uint8_t pin, uint16_t frequency, uint32_t duration)
-{
-	uint32_t count, load;
-	volatile uint32_t *config;
-
-	if (pin >= CORE_NUM_DIGITAL) return;
-	if (duration) {
-		count = (frequency * duration / 1000) * 2;
-	} else {
-		count = 0xFFFFFFFF;
-	}
-	load = (F_BUS / 2) / frequency;
-	config = portConfigRegister(pin);
-	__disable_irq();
-	if (pin != tone_pin) {
-		if (tone_pin < CORE_NUM_DIGITAL) {
-			tone_reg[0] = 1; // clear pin
-		}
-		tone_pin = pin;
-		tone_reg = portClearRegister(pin);
-		tone_reg[0] = 1; // clear pin
-		tone_reg[384] = 1; // output mode;
-		*config = PORT_PCR_SRE | PORT_PCR_DSE | PORT_PCR_MUX(1);
-	}
-	tone_toggle_count = count;
-	if (PIT_LDVAL3 != load) {
-		PIT_TCTRL3 = 0;
-		PIT_LDVAL3 = load;
-		PIT_TCTRL3 = 3;
-	}
-	__enable_irq();
-}
-
-void pit3_isr(void)
-{
-	PIT_TFLG3 = 1;
-
-	if (tone_toggle_count) {
-		tone_reg[128] = 1; // toggle
-		if (tone_toggle_count < 0xFFFFFFFF) tone_toggle_count--;
-	} else {
-		PIT_TCTRL3 = 0;
-		tone_reg[0] = 0; // clear
-		tone_pin = 255;
-	}
-}
-
-void noTone(uint8_t pin)
-{
-	if (pin >= CORE_NUM_DIGITAL) return;
-	__disable_irq();
-	if (pin == tone_pin) {
-		PIT_TCTRL3 = 0;
-		tone_reg[0] = 0; // clear
-		tone_pin = 255;
-	}
-	__enable_irq();
-}
-
 unsigned long rtc_get(void)
 {
 	return RTC_TSR;
@@ -486,8 +353,6 @@ void _init_Teensyduino_internal_(void)
 	FTM1_SC = FTM_SC_CLKS(1) | FTM_SC_PS(DEFAULT_FTM_PRESCALE);
 
 	analog_init();
-	//init_servo();
-	init_tone();
 	//delay(100); // TODO: this is not necessary, right?
 	usb_init();
 }
@@ -505,7 +370,6 @@ void analogWrite(uint8_t pin, int val)
 {
 	uint32_t cval, max;
 
-	pinMode(pin, OUTPUT);
 	max = 1 << analog_write_res;
 	if (val <= 0) {
 		digitalWrite(pin, LOW);
@@ -581,6 +445,7 @@ void analogWrite(uint8_t pin, int val)
 		break;
 	  default:
 		digitalWrite(pin, (val > 127) ? HIGH : LOW);
+		pinMode(pin, OUTPUT);
 	}
 }
 
@@ -613,7 +478,8 @@ void analogWriteFrequency(uint8_t pin, uint32_t frequency)
 	//serial_print("prescale = ");
 	//serial_phex(prescale);
 	//serial_print("\n");
-	mod = ((F_BUS >> prescale) / frequency) - 1;
+	//mod = ((F_BUS >> prescale) / frequency) - 1;
+	mod = (((F_BUS >> prescale) + (frequency >> 1)) / frequency) - 1;
 	if (mod > 65535) mod = 65535;
 	//serial_print("mod = ");
 	//serial_phex32(mod);
@@ -755,6 +621,7 @@ uint8_t shiftIn_msbFirst(uint8_t dataPin, uint8_t clockPin)
 // the systick interrupt is supposed to increment this at 1 kHz rate
 volatile uint32_t systick_millis_count = 0;
 
+//uint32_t systick_current, systick_count, systick_istatus;  // testing only
 
 uint32_t micros(void)
 {
@@ -765,7 +632,10 @@ uint32_t micros(void)
 	count = systick_millis_count;
 	istatus = SCB_ICSR;	// bit 26 indicates if systick exception pending
 	__enable_irq();
-	if ((istatus & SCB_ICSR_PENDSTSET) && current > ((F_CPU / 1000) - 50)) count++;
+	 //systick_current = current;
+	 //systick_count = count;
+	 //systick_istatus = istatus & SCB_ICSR_PENDSTSET ? 1 : 0;
+	if ((istatus & SCB_ICSR_PENDSTSET) && current > 50) count++;
 	current = ((F_CPU / 1000) - 1) - current;
 	return count * 1000 + current / (F_CPU / 1000000);
 }
@@ -774,13 +644,15 @@ void delay(uint32_t ms)
 {
 	uint32_t start = micros();
 
-	while (1) {
-		if ((micros() - start) >= 1000) {
-			ms--;
-			if (ms == 0) break;
-			start += 1000;
+	if (ms > 0) {
+		while (1) {
+			if ((micros() - start) >= 1000) {
+				ms--;
+				if (ms == 0) return;
+				start += 1000;
+			}
+			yield();
 		}
-		yield();
 	}
 }
 

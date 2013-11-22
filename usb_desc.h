@@ -1,3 +1,33 @@
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2013 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be 
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows 
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #ifndef _usb_desc_h_
 #define _usb_desc_h_
 
@@ -61,6 +91,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN	10
   #define EP0_SIZE		64
   #define NUM_ENDPOINTS		4
+  #define NUM_USB_BUFFERS	12
   #define NUM_INTERFACE		2
   #define CDC_STATUS_INTERFACE	0
   #define CDC_DATA_INTERFACE	1
@@ -84,6 +115,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN	23
   #define EP0_SIZE		64
   #define NUM_ENDPOINTS         5
+  #define NUM_USB_BUFFERS	24
   #define NUM_INTERFACE		4
   #define SEREMU_INTERFACE      2	// Serial emulation
   #define SEREMU_TX_ENDPOINT    1
@@ -127,6 +159,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN	30
   #define EP0_SIZE		64
   #define NUM_ENDPOINTS		6
+  #define NUM_USB_BUFFERS	30
   #define NUM_INTERFACE		5
   #define CDC_IAD_DESCRIPTOR	1
   #define CDC_STATUS_INTERFACE	0
@@ -169,6 +202,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN	11
   #define EP0_SIZE		64
   #define NUM_ENDPOINTS         4
+  #define NUM_USB_BUFFERS	16
   #define NUM_INTERFACE		2
   #define SEREMU_INTERFACE      1	// Serial emulation
   #define SEREMU_TX_ENDPOINT    1
@@ -200,8 +234,8 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN	18
   #define EP0_SIZE		64
   #define NUM_ENDPOINTS         6
+  #define NUM_USB_BUFFERS	12
   #define NUM_INTERFACE		2
-
   #define RAWHID_INTERFACE      0	// RawHID
   #define RAWHID_TX_ENDPOINT    3
   #define RAWHID_TX_SIZE        64
@@ -209,7 +243,6 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define RAWHID_RX_ENDPOINT    4
   #define RAWHID_RX_SIZE        64
   #define RAWHID_RX_INTERVAL    1
-
   #define SEREMU_INTERFACE      1	// Serial emulation
   #define SEREMU_TX_ENDPOINT    1
   #define SEREMU_TX_SIZE        64
@@ -217,7 +250,6 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define SEREMU_RX_ENDPOINT    2
   #define SEREMU_RX_SIZE        32
   #define SEREMU_RX_INTERVAL    2
-
   #define RAWHID_DESC_OFFSET	(9 + 9)
   #define SEREMU_DESC_OFFSET	(9 + 9+9+7+7 + 9)
   #define CONFIG_DESC_SIZE	(9 + 9+9+7+7 + 9+9+7+7)
@@ -235,8 +267,8 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN	26
   #define EP0_SIZE		64
   #define NUM_ENDPOINTS         4
+  #define NUM_USB_BUFFERS	20
   #define NUM_INTERFACE		2
-
   #define FLIGHTSIM_INTERFACE	0	// Flight Sim Control
   #define FLIGHTSIM_TX_ENDPOINT	3
   #define FLIGHTSIM_TX_SIZE	64
@@ -244,7 +276,6 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define FLIGHTSIM_RX_ENDPOINT	4
   #define FLIGHTSIM_RX_SIZE	64
   #define FLIGHTSIM_RX_INTERVAL	1
-
   #define SEREMU_INTERFACE      1	// Serial emulation
   #define SEREMU_TX_ENDPOINT    1
   #define SEREMU_TX_SIZE        64
@@ -252,8 +283,6 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define SEREMU_RX_ENDPOINT    2
   #define SEREMU_RX_SIZE        32
   #define SEREMU_RX_INTERVAL    2
-
-
   #define FLIGHTSIM_DESC_OFFSET	(9 + 9)
   #define SEREMU_DESC_OFFSET	(9 + 9+9+7+7 + 9)
   #define CONFIG_DESC_SIZE	(9 + 9+9+7+7 + 9+9+7+7)

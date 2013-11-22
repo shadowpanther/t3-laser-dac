@@ -5,6 +5,9 @@ TARGET = main
 # configurable options
 OPTIONS = -DF_CPU=48000000 -DUSB_SERIAL -DLAYOUT_US_ENGLISH
 
+# options needed by many Arduino libraries to configure for Teensy 3.0
+OPTIONS += -D__MK20DX128__ -DARDUIO=104
+
 
 #************************************************************************
 # Location of Teensyduino utilities, Toolchain, and Arduino Libraries.
@@ -27,10 +30,10 @@ COMPILERPATH = ../tools/arm-none-eabi/bin
 #************************************************************************
 
 # CPPFLAGS = compiler options for C and C++
-CPPFLAGS = -Wall -g -Os -mcpu=cortex-m4 -mthumb -nostdlib -MMD $(OPTIONS)
+CPPFLAGS = -Wall -g -Os -mcpu=cortex-m4 -mthumb -nostdlib -MMD $(OPTIONS) -I.
 
 # compiler options for C++ only
-CXXFLAGS = -std=c++0x -felide-constructors -fno-exceptions -fno-rtti
+CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
 
 # compiler options for C only
 CFLAGS =

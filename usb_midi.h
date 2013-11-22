@@ -1,3 +1,33 @@
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2013 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be 
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows 
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #ifndef USBmidi_h_
 #define USBmidi_h_
 
@@ -5,7 +35,15 @@
 
 #include <inttypes.h>
 
-// MIDI Constants
+/*
+These were originally meant to allow programs written for
+Francois Best's MIDI library to be easily used with
+Teensy's usbMIDI which implements the same API.  However,
+the MIDI library definitions have changed, so these names
+now conflict.  They've never been documented (the PJRC web
+page documents usbMIDI.getType() in numbers) so they are
+now commented out so usbMIDI and the MIDI library can be
+used together without conflict.
 #define NoteOff 0
 #define NoteOn 1
 #define AfterTouchPoly 2
@@ -14,6 +52,8 @@
 #define AfterTouchChannel 5
 #define PitchBend 6
 #define SystemExclusive 7
+*/
+
 #define USB_MIDI_SYSEX_MAX 60  // maximum sysex length we can receive
 
 // C language implementation
@@ -68,7 +108,7 @@ class usb_midi_class
 	}
         void sendProgramChange(uint32_t program, uint32_t channel) __attribute__((always_inline)) {
 		usb_midi_write_packed(0xC00C | (((channel - 1) & 0x0F) << 8)
-		  | ((channel & 0x7F) << 16));
+		  | ((program & 0x7F) << 16));
 	}
         void sendAfterTouch(uint32_t pressure, uint32_t channel) __attribute__((always_inline)) {
 		usb_midi_write_packed(0xD00D | (((channel - 1) & 0x0F) << 8)

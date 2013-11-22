@@ -1,3 +1,33 @@
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2013 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be 
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows 
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include "usb_dev.h"
 #include "usb_midi.h"
 #include "core_pins.h" // for yield()
@@ -146,43 +176,43 @@ int usb_midi_read(uint32_t channel)
 			return 0;
 		}
 		if (type1 == 0x08 && type2 == 0x08) {
-			usb_midi_msg_type = NoteOff;		// 0 = Note off
+			usb_midi_msg_type = 0;			// 0 = Note off
 			if (usb_midi_handleNoteOff)
 				(*usb_midi_handleNoteOff)(ch, (n >> 16), (n >> 24));
 		} else
 		if (type1 == 0x09 && type2 == 0x09) {
 			if ((n >> 24) > 0) {
-				usb_midi_msg_type = NoteOn;	// 1 = Note on
+				usb_midi_msg_type = 1;		// 1 = Note on
 				if (usb_midi_handleNoteOn)
 					(*usb_midi_handleNoteOn)(ch, (n >> 16), (n >> 24));
 			} else {
-				usb_midi_msg_type = NoteOff;	// 0 = Note off
+				usb_midi_msg_type = 0;		// 0 = Note off
 				if (usb_midi_handleNoteOff)
 					(*usb_midi_handleNoteOff)(ch, (n >> 16), (n >> 24));
 			}
 		} else
 		if (type1 == 0x0A && type2 == 0x0A) {
-			usb_midi_msg_type = AfterTouchPoly;	// 2 = Poly Pressure
+			usb_midi_msg_type = 2;			// 2 = Poly Pressure
 			if (usb_midi_handleVelocityChange)
 				(*usb_midi_handleVelocityChange)(ch, (n >> 16), (n >> 24));
 		} else
 		if (type1 == 0x0B && type2 == 0x0B) {
-			usb_midi_msg_type = ControlChange;	// 3 = Control Change
+			usb_midi_msg_type = 3;			// 3 = Control Change
 			if (usb_midi_handleControlChange)
 				(*usb_midi_handleControlChange)(ch, (n >> 16), (n >> 24));
 		} else
 		if (type1 == 0x0C && type2 == 0x0C) {
-			usb_midi_msg_type = ProgramChange;	// 4 = Program Change
+			usb_midi_msg_type = 4;			// 4 = Program Change
 			if (usb_midi_handleProgramChange)
 				(*usb_midi_handleProgramChange)(ch, (n >> 16));
 		} else
 		if (type1 == 0x0D && type2 == 0x0D) {
-			usb_midi_msg_type = AfterTouchChannel;	// 5 = After Touch
+			usb_midi_msg_type = 5;			// 5 = After Touch
 			if (usb_midi_handleAfterTouch)
 				(*usb_midi_handleAfterTouch)(ch, (n >> 16));
 		} else
 		if (type1 == 0x0E && type2 == 0x0E) {
-			usb_midi_msg_type = PitchBend;		// 6 = Pitch Bend
+			usb_midi_msg_type = 6;			// 6 = Pitch Bend
 			if (usb_midi_handlePitchChange)
 				(*usb_midi_handlePitchChange)(ch,
 				  ((n >> 16) & 0x7F) | ((n >> 17) & 0x3F80));
@@ -207,7 +237,7 @@ int usb_midi_read(uint32_t channel)
 		if (type1 == 0x07) sysex_byte(n >> 24);
 		usb_midi_msg_data1 = usb_midi_msg_sysex_len;
 		usb_midi_msg_sysex_len = 0;
-		usb_midi_msg_type = SystemExclusive;	// 7 = Sys Ex
+		usb_midi_msg_type = 7;				// 7 = Sys Ex
 		return 1;
 	}
 	if (type1 == 0x0F) {

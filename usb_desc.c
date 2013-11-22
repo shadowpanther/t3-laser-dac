@@ -1,5 +1,37 @@
-#include "usb_desc.h"
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2013 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be 
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows 
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
+#include "usb_desc.h"
+#include "usb_names.h"
+#include "mk20dx128.h"
+#include "avr_functions.h"
 
 // USB Descriptors are binary data which the USB host reads to
 // automatically detect a USB device's capabilities.  The format
@@ -643,33 +675,64 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
 // referenced by index numbers.  These descriptors are the
 // actual string data
 
+/* defined in usb_names.h
 struct usb_string_descriptor_struct {
         uint8_t bLength;
         uint8_t bDescriptorType;
         uint16_t wString[];
 };
+*/
 
-static struct usb_string_descriptor_struct string0 = {
+extern struct usb_string_descriptor_struct usb_string_manufacturer_name
+        __attribute__ ((weak, alias("usb_string_manufacturer_name_default")));
+extern struct usb_string_descriptor_struct usb_string_product_name
+        __attribute__ ((weak, alias("usb_string_product_name_default")));
+extern struct usb_string_descriptor_struct usb_string_serial_number
+        __attribute__ ((weak, alias("usb_string_serial_number_default")));
+
+struct usb_string_descriptor_struct string0 = {
         4,
         3,
         {0x0409}
 };
 
-static struct usb_string_descriptor_struct string1 = {
+struct usb_string_descriptor_struct usb_string_manufacturer_name_default = {
         2 + MANUFACTURER_NAME_LEN * 2,
         3,
         MANUFACTURER_NAME
 };
-static struct usb_string_descriptor_struct string2 = {
+struct usb_string_descriptor_struct usb_string_product_name_default = {
 	2 + PRODUCT_NAME_LEN * 2,
         3,
         PRODUCT_NAME
 };
-static struct usb_string_descriptor_struct string3 = {
+struct usb_string_descriptor_struct usb_string_serial_number_default = {
         12,
         3,
-        {'1','2','3','4','5'}
+        {0,0,0,0,0,0,0,0,0,0}
 };
+
+void usb_init_serialnumber(void)
+{
+	char buf[11];
+	uint32_t i, num;
+
+	__disable_irq();
+	FTFL_FSTAT = FTFL_FSTAT_RDCOLERR | FTFL_FSTAT_ACCERR | FTFL_FSTAT_FPVIOL;
+	FTFL_FCCOB0 = 0x41;
+	FTFL_FCCOB1 = 15;
+	FTFL_FSTAT = FTFL_FSTAT_CCIF;
+	while (!(FTFL_FSTAT & FTFL_FSTAT_CCIF)) ; // wait
+	num = *(uint32_t *)&FTFL_FCCOB7;
+	__enable_irq();
+	ultoa(num, buf, 10);
+	for (i=0; i<10; i++) {
+		char c = buf[i];
+		if (!c) break;
+		usb_string_serial_number_default.wString[i] = c;
+	}
+	usb_string_serial_number_default.bLength = i * 2 + 2;
+}
 
 
 // **************************************************************
@@ -706,10 +769,13 @@ const usb_descriptor_list_t usb_descriptor_list[] = {
 	{0x2200, FLIGHTSIM_INTERFACE, flightsim_report_desc, sizeof(flightsim_report_desc)},
 	{0x2100, FLIGHTSIM_INTERFACE, config_descriptor+FLIGHTSIM_DESC_OFFSET, 9},
 #endif
-        {0x0300, 0x0000, (const uint8_t *)&string0, 4},
-        {0x0301, 0x0409, (const uint8_t *)&string1, 2 + MANUFACTURER_NAME_LEN * 2},
-        {0x0302, 0x0409, (const uint8_t *)&string2, 2 + PRODUCT_NAME_LEN * 2},
-        {0x0303, 0x0409, (const uint8_t *)&string3, 12},
+        {0x0300, 0x0000, (const uint8_t *)&string0, 0},
+        {0x0301, 0x0409, (const uint8_t *)&usb_string_manufacturer_name, 0},
+        {0x0302, 0x0409, (const uint8_t *)&usb_string_product_name, 0},
+        {0x0303, 0x0409, (const uint8_t *)&usb_string_serial_number, 0},
+        //{0x0301, 0x0409, (const uint8_t *)&string1, 0},
+        //{0x0302, 0x0409, (const uint8_t *)&string2, 0},
+        //{0x0303, 0x0409, (const uint8_t *)&string3, 0},
 	{0, 0, NULL, 0}
 };
 
