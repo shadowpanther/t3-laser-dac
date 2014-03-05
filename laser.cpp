@@ -1,9 +1,16 @@
 #include "laser.h"
 #include "mk20dx128.h"
 #include "core_pins.h"
+#include "wiring.h"
 #include "IntervalTimer.h"
 
 Laser::Laser(){
+#ifdef LASER_DEBUG
+	// Status LED pin
+	CORE_PIN13_DDRREG |= CORE_PIN13_BITMASK;
+	CORE_PIN13_CONFIG = PORT_PCR_SRE | PORT_PCR_DSE | PORT_PCR_MUX(1);
+#endif
+
 	// Init SPI
 	SIM_SCGC6 |= SIM_SCGC6_SPI0; // Clock to SPI module enable
 	CORE_PIN2_CONFIG = PORT_PCR_DSE | PORT_PCR_MUX(2); // Setup pins CS
@@ -46,16 +53,22 @@ Laser::Laser(){
 	fifo_empty = true;
 }
 
-void Laser::set(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b) {
+void Laser::set(int16_t x, int16_t y, int8_t r, int8_t g, int8_t b) {
+#ifdef LASER_DEBUG
+	CORE_PIN13_PORTSET = CORE_PIN13_BITMASK;   // LED ON
+#endif
 	while(fifo_full) yield();
-	fifo[fifo_head].x.data = x;
-	fifo[fifo_head].y.data = y;
-	fifo[fifo_head].r = r;
-	fifo[fifo_head].g = g;
-	fifo[fifo_head].b = b;
+	fifo[fifo_head].x.data = constrain(x, 0, 4095);
+	fifo[fifo_head].y.data = constrain(y, 0, 4095);
+	fifo[fifo_head].r = constrain(r, 0, 255);
+	fifo[fifo_head].g = constrain(g, 0, 255);
+	fifo[fifo_head].b = constrain(b, 0, 255);
 	fifo_empty = false;
 	if(++fifo_head==LASER_FIFO_SIZE) fifo_head = 0;
 	if(fifo_head==fifo_tail) fifo_full = true;
+#ifdef LASER_DEBUG
+	CORE_PIN13_PORTCLEAR = CORE_PIN13_BITMASK; // LED OFF
+#endif
 }
 
 void Laser::tick() {

@@ -29,7 +29,7 @@ public:
 	Laser();
 	// ~Laser();
 
-	void set(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b);
+	void set(int16_t x, int16_t y, int8_t r, int8_t g, int8_t b);
 	void tick();
 	bool is_fifo_empty() { return fifo_empty; }
 	bool is_fifo_full() { return fifo_full; }

@@ -8,6 +8,9 @@ OPTIONS = -DF_CPU=48000000 -DUSB_SERIAL -DLAYOUT_US_ENGLISH
 # options needed by many Arduino libraries to configure for Teensy 3.0
 OPTIONS += -D__MK20DX128__ -DARDUIO=104
 
+#light up debug LED while waiting for next tick (indicate free CPU time)
+OPTIONS += -DLASER_DEBUG
+
 
 #************************************************************************
 # Location of Teensyduino utilities, Toolchain, and Arduino Libraries.
@@ -63,7 +66,7 @@ OBJS := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o)
 all: $(TARGET).hex
 
 $(TARGET).elf: $(OBJS) mk20dx128.ld
-	$(CC) $(LDFLAGS) -o $@ $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 %.hex: %.elf
 	$(SIZE) $<
