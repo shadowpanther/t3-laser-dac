@@ -4,6 +4,8 @@
 #include "wiring.h"
 #include "IntervalTimer.h"
 
+IntervalTimer Timer;
+
 Laser::Laser(){
 #ifdef LASER_DEBUG
 	// Status LED pin
@@ -21,6 +23,8 @@ Laser::Laser(){
 	SPI0_MCR |= SPI_MCR_MDIS | SPI_MCR_HALT; // SPI stop
 	SPI0_MCR |= SPI_MCR_DCONF(0) | SPI_MCR_MSTR | SPI_MCR_PCSIS(31); // SPI config
 	SPI0_MCR &= ~(SPI_MCR_MDIS | SPI_MCR_HALT); // SPI start
+
+	Timer.begin((void(*)())&Laser::tick, (float)33.3333333333);
 
 	// // Init PIT (Periodic Interrupt Timer)
 	// SIM_SCGC6 |= SIM_SCGC6_PIT; // Clock to PIT enable
