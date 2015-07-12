@@ -85,6 +85,6 @@ void Laser::tick() {
 	if(fifo_head==fifo_tail) fifo_empty = true;
 
 	SPI0_PUSHR = SPI_PUSHR_CTAS(0) | SPI_PUSHR_PCS(1) | reg_x;
-	SPI0_PUSHR = SPI_PUSHR_CTAS(0) | SPI_PUSHR_PCS(1) | reg_y;	
+	SPI0_PUSHR = SPI_PUSHR_CTAS(0) | SPI_PUSHR_PCS(1) | reg_y;
 }
 

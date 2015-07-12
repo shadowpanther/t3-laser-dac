@@ -7,14 +7,12 @@ int x=0, y=0;
 volatile bool stack_full=false;
 Laser laser;
 // IntervalTimer Timer;
-void tick(void); // forward declaration
 void laser_line(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t step, int8_t r, int8_t g, int8_t b);
+void laser_line_to(int16_t x, int16_t y, int16_t step, int8_t r, int8_t g, int8_t b);
 
 extern "C" int main(void)
 {
 	int count=0;
-
-	// Timer.begin(tick, (float)33.3333333333);
 	randomSeed(analogRead(0));
 
 	// while(1) {
@@ -26,23 +24,21 @@ extern "C" int main(void)
 	int16_t step = 20;
 	int x, y, xo = 0, yo = 0;
 	while (1) {
-		// laser_line(2048,    0, 3072, 4095, step, 255, 255, 255);
-		// laser_line(3072, 4095,    0, 1920, step, 255, 255, 255);
-		// laser_line(   0, 1920, 4095, 1920, step, 255, 255, 255);
-		// laser_line(4095, 1920, 1024, 4095, step, 255, 255, 255);
-		// laser_line(1024, 4095, 2048,    0, step, 255, 255, 255);
-
-		// laser_line(2000, 2000, 3000, 3000, step, 255, 255, 255);
-		// laser_line(3000, 3000, 2000, 3000, step, 255, 255, 255);
-		// laser_line(2000, 3000, 3000, 2000, step, 255, 255, 255);
-		// laser_line(3000, 2000, 2000, 2000, step, 255, 255, 255);
-
-		x = random(4096);
-		y = random(4096);
-		laser_line(xo, yo, x, y, step, 255, 255, 255);
-		xo = x;
-		yo = y;
+		x=sine[count];
+		y=sine[(count+1024)&0x0FFF];
+		count = (count+32)&0x0FFF;
+		laser_line_to(x, y, step, 255, 255, 255);
+		laser_line_to(4095-x, y, step, 255, 255, 255);
+		laser_line_to(4095-x, 4095-y, step, 255, 255, 255);
+		laser_line_to(x, 4095-y, step, 255, 255, 255);
 	}
+}
+
+void laser_line_to(int16_t x, int16_t y, int16_t step, int8_t r, int8_t g, int8_t b){
+	static int16_t xo=0, yo=0;
+	laser_line(xo, yo, x, y, step, r, g, b);
+	xo = x;
+	yo = y;
 }
 
 #if 1
@@ -138,7 +134,3 @@ void laser_line(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t step, in
 	}
 }
 #endif
-
-void tick(void) {
-	laser.tick();
-}
